@@ -27,3 +27,4 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
+netcore-api.code-workspace
