@@ -25,6 +25,10 @@ namespace netcore_api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var connection = @"Server=sql-server-db;Database=master;User=sa;Password=developer;";
+
+            
+
             services.AddControllers();
         }
 

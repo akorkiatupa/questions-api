@@ -1,0 +1,16 @@
+version: '3.4'
+
+#base compose
+
+services:
+  netcore_api:
+    image: ${DOCKER_REGISTRY-}netcoreapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    depends_on:
+      - mssql-db
+
+  mssql-db:   
+    image: mcr.microsoft.com/mssql/server:2019-latest
