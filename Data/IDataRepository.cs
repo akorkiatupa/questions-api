@@ -8,6 +8,7 @@ namespace netcore_api.Data
 {
     public interface IDataRepository
     {
+        #region getQueriesRegion
         IEnumerable<QuestionGetManyResponse> GetQuestions();
 
         IEnumerable<QuestionGetManyResponse> GetQuestionsBySearch(string search);
@@ -19,14 +20,18 @@ namespace netcore_api.Data
         bool QuestionExists(int questionId);
 
         AnswerGetResponse GetAnswer(int answerId);
+        #endregion
 
-
+        #region setQueriesRegion
         QuestionGetSingleResponse PostQuestion(QuestionPostRequest question);
 
         QuestionGetSingleResponse PutQuestion(int questionId, QuestionPutRequest question);
 
-        void DeleteQuestion(int questionId);
-
         AnswerGetResponse PostAnswer(AnswerPostRequest answer);
+        #endregion
+
+        #region deleteQueriesRegion
+        void DeleteQuestion(int questionId);
+        #endregion
     }
 }
