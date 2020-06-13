@@ -5,7 +5,7 @@
     <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>a3a7ba67-511b-4ebb-b10e-96fccd219cb4</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/weatherforecast</DockerServiceUrl>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/api/questions</DockerServiceUrl>
     <DockerServiceName>netcore_api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
