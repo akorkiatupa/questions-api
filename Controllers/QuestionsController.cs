@@ -56,7 +56,14 @@ namespace netcore_api.Controllers
         [HttpPost]
         public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
         {
-            var savedQuestion = _dataRepository.PostQuestion(questionPostRequest);
+            var savedQuestion = _dataRepository.PostQuestion(new QuestionPostFullRequest 
+            { 
+                Title = questionPostRequest.Title,
+                Content = questionPostRequest.Content,
+                UserId = "1",
+                UserName ="bob.test@test.com",
+                Created = DateTime.UtcNow
+            });
 
             return CreatedAtAction(nameof(GetQuestion), new { questionId = savedQuestion.QuestionId }, savedQuestion);
         }
@@ -64,11 +71,6 @@ namespace netcore_api.Controllers
         [HttpPut("{questionId}")]
         public ActionResult<QuestionGetSingleResponse> PutQuestion(int questionId, QuestionPutRequest questionPutRequest)
         {
-            // TODO - get the question from the data repository
-            // TODO - return HTTP status code 404 if the question isn't found
-            // TODO - update the question model
-            // TODO - call the data repository with the updated question model to update the question in the database
-            // TODO - return the saved question
 
             var questionToUpdate = _dataRepository.GetQuestion(questionId);
 
@@ -100,15 +102,23 @@ namespace netcore_api.Controllers
             return NoContent();
         }
 
-        [HttpPost("answer")]
+        [HttpPost("answer")]       
         public ActionResult<AnswerGetResponse> PostAnswer(AnswerPostRequest answerPostRequest)
         {
-            var questionExists = _dataRepository.QuestionExists(answerPostRequest.QuestionId);
+            var questionExists = _dataRepository.QuestionExists(answerPostRequest.QuestionId.Value);
             if (!questionExists)
             {
                 return NotFound();
             }
-            var savedAnswer = _dataRepository.PostAnswer(answerPostRequest);
+            var savedAnswer = _dataRepository.PostAnswer(new AnswerPostFullRequest 
+            {
+                Content = answerPostRequest.Content,
+                QuestionId = answerPostRequest.QuestionId.Value,
+                UserId = "1",
+                UserName = "bob.test@test.com",
+                Created = DateTime.UtcNow
+
+            });
             return savedAnswer;
         }
     }

@@ -20,11 +20,11 @@ namespace netcore_api.Data
         #endregion
 
         #region setQueriesRegion
-        QuestionGetSingleResponse PostQuestion(QuestionPostRequest question);
+        QuestionGetSingleResponse PostQuestion(QuestionPostFullRequest question);
 
         QuestionGetSingleResponse PutQuestion(int questionId, QuestionPutRequest question);
 
-        AnswerGetResponse PostAnswer(AnswerPostRequest answer);
+        AnswerGetResponse PostAnswer(AnswerPostFullRequest answer);
         #endregion
 
         #region deleteQueriesRegion

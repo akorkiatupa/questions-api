@@ -1,8 +1,12 @@
-﻿namespace netcore_api.Data.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace netcore_api.Data.Models
 {
     public class QuestionPutRequest
     {
+        [StringLength(100)]
         public string Title { get; set; }
+
         public string Content { get; set; }
     }
 }
