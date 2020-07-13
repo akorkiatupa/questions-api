@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DbUp;
 using netcore_api.Data;
+using netcore_api.Hubs;
 
 namespace netcore_api
 {
@@ -38,14 +39,21 @@ namespace netcore_api
             // AddTransient - New instance is created every time when requested.
             // AddSingleton - Only one class instance for the lifetime of the whole app.
             services.AddScoped<IDataRepository, DataRepository>();
+
+            // Add Cross origin policy, accept everything from dev environment
+            services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://127.0.0.1:3000").AllowCredentials()));
+
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            app.UseCors("CorsPolicy");
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                app.UseDeveloperExceptionPage();               
             }
 
             app.UseHttpsRedirection();
@@ -53,10 +61,11 @@ namespace netcore_api
             app.UseRouting();
 
             app.UseAuthorization();
-
+            
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                endpoints.MapControllers(); // maps controllers
+                endpoints.MapHub<QuestionsHub>("/questionshub"); // maps websoket to /questionshub
             });
         }
     }

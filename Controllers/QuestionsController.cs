@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using netcore_api.Data;
 using netcore_api.Data.Models;
+using Microsoft.AspNetCore.SignalR;
+using netcore_api.Hubs;
 
 namespace netcore_api.Controllers
 {
@@ -14,11 +13,13 @@ namespace netcore_api.Controllers
     public class QuestionsController : ControllerBase
     {
         private readonly IDataRepository _dataRepository;
+        private readonly IHubContext<QuestionsHub> _questionsHubContext;
 
         // IData repository added as depencency injection. As Scoped repostitory.
-        public QuestionsController(IDataRepository dataRepository)
+        public QuestionsController(IDataRepository dataRepository, IHubContext<QuestionsHub> questionHubContext)
         {
             _dataRepository = dataRepository;
+            _questionsHubContext = questionHubContext;
         }
 
         [HttpGet]
@@ -119,6 +120,10 @@ namespace netcore_api.Controllers
                 Created = DateTime.UtcNow
 
             });
+
+            _questionsHubContext.Clients.Group($"Questions-{answerPostRequest.QuestionId.Value}")
+                .SendAsync("ReceiveQuestion", _dataRepository.GetQuestion(answerPostRequest.QuestionId.Value));
+
             return savedAnswer;
         }
     }
