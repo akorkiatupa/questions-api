@@ -6,6 +6,7 @@ using netcore_api.Data.Models;
 using Microsoft.AspNetCore.SignalR;
 using netcore_api.Hubs;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace netcore_api.Controllers
 {
@@ -74,6 +75,7 @@ namespace netcore_api.Controllers
             return question;
         }
 
+        [Authorize]
         [HttpPost]
         public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
         {
@@ -91,6 +93,7 @@ namespace netcore_api.Controllers
             return this.CreatedAtAction(nameof(GetQuestion), new { questionId = savedQuestion.QuestionId }, savedQuestion);
         }
 
+        [Authorize]
         [HttpPut("{questionId}")]
         public ActionResult<QuestionGetSingleResponse> PutQuestion(int questionId, QuestionPutRequest questionPutRequest)
         {
@@ -112,6 +115,7 @@ namespace netcore_api.Controllers
             return updatedQuestion;
         }
 
+        [Authorize]
         [HttpDelete("{questionId}")]
         public ActionResult DeleteQuestion(int questionId)
         {
@@ -128,6 +132,7 @@ namespace netcore_api.Controllers
             return this.NoContent();
         }
 
+        [Authorize]
         [HttpPost("answer")]       
         public ActionResult<AnswerGetResponse> PostAnswer(AnswerPostRequest answerPostRequest)
         {

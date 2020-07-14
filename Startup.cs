@@ -54,14 +54,16 @@ namespace netcore_api
             services.AddSingleton<IQuestionCache, QuestionCache>();
 
             services.AddAuthentication(options =>
-           {
-               options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-
-               options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-           }).AddJwtBearer(options => {
-               options.Authority = this.Configuration["Auth0:Authority"];
-               options.Audience = this.Configuration["Auth0:Audience"];
-           });
+            {
+                options.DefaultAuthenticateScheme =
+                  JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme =
+                  JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.Authority = this.Configuration["Auth0:Authority"];
+                options.Audience = this.Configuration["Auth0:Audience"];
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
