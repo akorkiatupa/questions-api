@@ -7,6 +7,7 @@ using DbUp;
 using netcore_api.Data;
 using netcore_api.Hubs;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace netcore_api
 {
@@ -51,6 +52,16 @@ namespace netcore_api
             services.AddMemoryCache();
 
             services.AddSingleton<IQuestionCache, QuestionCache>();
+
+            services.AddAuthentication(options =>
+           {
+               options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+
+               options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+           }).AddJwtBearer(options => {
+               options.Authority = this.Configuration["Auth0:Authority"];
+               options.Audience = this.Configuration["Auth0:Audience"];
+           });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,7 +77,7 @@ namespace netcore_api
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
             
             app.UseEndpoints(endpoints =>

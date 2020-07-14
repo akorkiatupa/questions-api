@@ -169,7 +169,7 @@ namespace netcore_api.Data
         #region SetData functions to insert data to DB
         public QuestionGetSingleResponse PostQuestion(QuestionPostFullRequest question)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(this._connectionString))
             {
                 connection.Open();
 
@@ -181,13 +181,13 @@ namespace netcore_api.Data
                   question
                 );
 
-                return GetQuestion(questionId);
+                return this.GetQuestion(questionId);
             }
         }
 
         public QuestionGetSingleResponse PutQuestion(int questionId, QuestionPutRequest question)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(this._connectionString))
             {
                 connection.Open();
                 connection.Execute(
@@ -195,13 +195,13 @@ namespace netcore_api.Data
                     @QuestionId = @QuestionId, @Title = @Title, @Content = @Content",
                   new { QuestionId = questionId, question.Title, question.Content }
                 );
-                return GetQuestion(questionId);
+                return this.GetQuestion(questionId);
             }
         }
 
         public AnswerGetResponse PostAnswer(AnswerPostFullRequest answer)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(this._connectionString))
             {
                 connection.Open();
                 return connection.QueryFirst<AnswerGetResponse>(
