@@ -5,6 +5,7 @@ using netcore_api.Data;
 using netcore_api.Data.Models;
 using Microsoft.AspNetCore.SignalR;
 using netcore_api.Hubs;
+using System.Threading.Tasks;
 
 namespace netcore_api.Controllers
 {
@@ -14,41 +15,60 @@ namespace netcore_api.Controllers
     {
         private readonly IDataRepository _dataRepository;
         private readonly IHubContext<QuestionsHub> _questionsHubContext;
+        private readonly IQuestionCache _questionCache;
 
         // IData repository added as depencency injection. As Scoped repostitory.
-        public QuestionsController(IDataRepository dataRepository, IHubContext<QuestionsHub> questionHubContext)
+        public QuestionsController(IDataRepository dataRepository, IHubContext<QuestionsHub> questionHubContext, IQuestionCache questionCache)
         {
-            _dataRepository = dataRepository;
-            _questionsHubContext = questionHubContext;
+            this._dataRepository = dataRepository;
+            this._questionsHubContext = questionHubContext;
+            this._questionCache = questionCache;
         }
 
         [HttpGet]
-        public IEnumerable<QuestionGetManyResponse> GetQuestions(string search)
+        public IEnumerable<QuestionGetManyResponse> GetQuestions(string search, bool includeAnswers = false, int page = 1, int pageSize=20)
         {
             if (string.IsNullOrEmpty(search))
             {
-                return _dataRepository.GetQuestions();
+                if (includeAnswers)
+                {
+                    return this._dataRepository.GetQuestionsWithAnswers();
+                }
+                return this._dataRepository.GetQuestions();
             }
             else
-            {
-                return _dataRepository.GetQuestionsBySearch(search);
+            {   
+                return this._dataRepository.GetQuestionsBySearchWithPaging(search, page, pageSize);
             }
         }
 
         [HttpGet("unanswered")]
         public IEnumerable<QuestionGetManyResponse> GetUnansweredQuestions()
         {
-            return _dataRepository.GetUnansweredQuestions();
+            return this._dataRepository.GetUnansweredQuestions();
+        }
+
+        [HttpGet("unansweredasync")]
+        public async Task<IEnumerable<QuestionGetManyResponse>> GetUnansweredQuestionsAsync()
+        {
+            return await this._dataRepository.GetUnansweredQuestionsAsync();
         }
 
         [HttpGet("{questionId}")]
         public ActionResult<QuestionGetSingleResponse> GetQuestion(int questionId)
         {
-            var question = _dataRepository.GetQuestion(questionId);
+            var question = this._questionCache.Get(questionId);
 
-            if (null == question)
+            if (question == null)
             {
-                return NotFound();
+                question = this._dataRepository.GetQuestion(questionId);
+
+                if (null == question)
+                {
+                    return this.NotFound();
+                }
+
+                this._questionCache.Set(question);
             }
 
             return question;
@@ -57,7 +77,7 @@ namespace netcore_api.Controllers
         [HttpPost]
         public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
         {
-            var savedQuestion = _dataRepository.PostQuestion(new QuestionPostFullRequest 
+            var savedQuestion = this._dataRepository.PostQuestion(new QuestionPostFullRequest 
             { 
                 Title = questionPostRequest.Title,
                 Content = questionPostRequest.Content,
@@ -66,24 +86,28 @@ namespace netcore_api.Controllers
                 Created = DateTime.UtcNow
             });
 
-            return CreatedAtAction(nameof(GetQuestion), new { questionId = savedQuestion.QuestionId }, savedQuestion);
+            this._questionCache.Set(savedQuestion);
+
+            return this.CreatedAtAction(nameof(GetQuestion), new { questionId = savedQuestion.QuestionId }, savedQuestion);
         }
 
         [HttpPut("{questionId}")]
         public ActionResult<QuestionGetSingleResponse> PutQuestion(int questionId, QuestionPutRequest questionPutRequest)
         {
 
-            var questionToUpdate = _dataRepository.GetQuestion(questionId);
+            var questionToUpdate = this._dataRepository.GetQuestion(questionId);
 
             if (null == questionToUpdate)
             {
-                return NotFound();
+                return this.NotFound();
             }
 
             questionPutRequest.Title = string.IsNullOrEmpty(questionPutRequest.Title) ? questionToUpdate.Title : questionPutRequest.Title;
             questionPutRequest.Content = string.IsNullOrEmpty(questionPutRequest.Content) ? questionToUpdate.Content : questionPutRequest.Content;
 
-            var updatedQuestion = _dataRepository.PutQuestion(questionId, questionPutRequest);
+            var updatedQuestion = this._dataRepository.PutQuestion(questionId, questionPutRequest);
+
+            this._questionCache.Remove(updatedQuestion.QuestionId);
 
             return updatedQuestion;
         }
@@ -91,38 +115,39 @@ namespace netcore_api.Controllers
         [HttpDelete("{questionId}")]
         public ActionResult DeleteQuestion(int questionId)
         {
-            var question = _dataRepository.GetQuestion(questionId);
+            var question = this._dataRepository.GetQuestion(questionId);
 
             if(null == question)
             {
-                return NotFound();
+                return this.NotFound();
             }
 
-            _dataRepository.DeleteQuestion(questionId);
+            this._dataRepository.DeleteQuestion(questionId);
+            this._questionCache.Remove(questionId);
 
-            return NoContent();
+            return this.NoContent();
         }
 
         [HttpPost("answer")]       
         public ActionResult<AnswerGetResponse> PostAnswer(AnswerPostRequest answerPostRequest)
         {
-            var questionExists = _dataRepository.QuestionExists(answerPostRequest.QuestionId.Value);
+            var questionExists = this._dataRepository.QuestionExists(answerPostRequest.QuestionId.Value);
             if (!questionExists)
             {
-                return NotFound();
+                return this.NotFound();
             }
-            var savedAnswer = _dataRepository.PostAnswer(new AnswerPostFullRequest 
+            var savedAnswer = this._dataRepository.PostAnswer(new AnswerPostFullRequest 
             {
                 Content = answerPostRequest.Content,
                 QuestionId = answerPostRequest.QuestionId.Value,
                 UserId = "1",
                 UserName = "bob.test@test.com",
                 Created = DateTime.UtcNow
-
             });
+            this._questionCache.Remove(answerPostRequest.QuestionId.Value);
 
-            _questionsHubContext.Clients.Group($"Questions-{answerPostRequest.QuestionId.Value}")
-                .SendAsync("ReceiveQuestion", _dataRepository.GetQuestion(answerPostRequest.QuestionId.Value));
+            this._questionsHubContext.Clients.Group($"Questions-{answerPostRequest.QuestionId.Value}")
+                .SendAsync("ReceiveQuestion", this._dataRepository.GetQuestion(answerPostRequest.QuestionId.Value));
 
             return savedAnswer;
         }

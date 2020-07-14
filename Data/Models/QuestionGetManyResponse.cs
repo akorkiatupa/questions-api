@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace netcore_api.Data.Models
 {
@@ -9,5 +11,6 @@ namespace netcore_api.Data.Models
         public string Content { get; set; }
         public string UserName { get; set; }
         public DateTime Created { get; set; }
+        public List<AnswerGetResponse> Answers { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using netcore_api.Data.Models;
+using System.Threading.Tasks;
 
 namespace netcore_api.Data
 {
@@ -11,6 +12,10 @@ namespace netcore_api.Data
         IEnumerable<QuestionGetManyResponse> GetQuestionsBySearch(string search);
 
         IEnumerable<QuestionGetManyResponse> GetUnansweredQuestions();
+        Task<IEnumerable<QuestionGetManyResponse>> GetUnansweredQuestionsAsync();
+
+        IEnumerable<QuestionGetManyResponse> GetQuestionsWithAnswers();
+        IEnumerable<QuestionGetManyResponse> GetQuestionsBySearchWithPaging( string search, int pageNumber, int pageSize );
 
         QuestionGetSingleResponse GetQuestion(int questionId);
 

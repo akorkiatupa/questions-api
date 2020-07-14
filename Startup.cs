@@ -6,22 +6,26 @@ using Microsoft.Extensions.Hosting;
 using DbUp;
 using netcore_api.Data;
 using netcore_api.Hubs;
+using System.Threading.Tasks;
 
 namespace netcore_api
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
 
         public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            this.Configuration = configuration;
+        }
+
+        
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var connectionString = this.Configuration.GetConnectionString("DefaultConnection");
 
             EnsureDatabase.For.SqlDatabase(connectionString);
             // deploy changes to sql database with scripts embedded in to the project, as db transaction.
@@ -44,6 +48,9 @@ namespace netcore_api
             services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://127.0.0.1:3000").AllowCredentials()));
 
             services.AddSignalR();
+            services.AddMemoryCache();
+
+            services.AddSingleton<IQuestionCache, QuestionCache>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
