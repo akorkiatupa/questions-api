@@ -8,6 +8,8 @@ using netcore_api.Data;
 using netcore_api.Hubs;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using netcore_api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace netcore_api
 {
@@ -64,6 +66,16 @@ namespace netcore_api
                 options.Authority = this.Configuration["Auth0:Authority"];
                 options.Audience = this.Configuration["Auth0:Audience"];
             });
+
+            services.AddHttpClient();
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MustBeQuestionAuthor", policy => policy.Requirements.Add(new MustBeQuestionAuthorRequirement()));
+            });
+
+            services.AddScoped<IAuthorizationHandler, MustBeQuestionAuthorHandler>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
