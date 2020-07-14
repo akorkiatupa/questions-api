@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace netcore_api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class QuestionsController : ControllerBase
@@ -26,6 +27,7 @@ namespace netcore_api.Controllers
             this._questionCache = questionCache;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IEnumerable<QuestionGetManyResponse> GetQuestions(string search, bool includeAnswers = false, int page = 1, int pageSize=20)
         {
@@ -43,18 +45,21 @@ namespace netcore_api.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("unanswered")]
         public IEnumerable<QuestionGetManyResponse> GetUnansweredQuestions()
         {
             return this._dataRepository.GetUnansweredQuestions();
         }
 
+        [AllowAnonymous]
         [HttpGet("unansweredasync")]
         public async Task<IEnumerable<QuestionGetManyResponse>> GetUnansweredQuestionsAsync()
         {
             return await this._dataRepository.GetUnansweredQuestionsAsync();
         }
 
+        [AllowAnonymous]
         [HttpGet("{questionId}")]
         public ActionResult<QuestionGetSingleResponse> GetQuestion(int questionId)
         {
@@ -75,7 +80,6 @@ namespace netcore_api.Controllers
             return question;
         }
 
-        [Authorize]
         [HttpPost]
         public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
         {
@@ -93,7 +97,6 @@ namespace netcore_api.Controllers
             return this.CreatedAtAction(nameof(GetQuestion), new { questionId = savedQuestion.QuestionId }, savedQuestion);
         }
 
-        [Authorize]
         [HttpPut("{questionId}")]
         public ActionResult<QuestionGetSingleResponse> PutQuestion(int questionId, QuestionPutRequest questionPutRequest)
         {
@@ -115,7 +118,6 @@ namespace netcore_api.Controllers
             return updatedQuestion;
         }
 
-        [Authorize]
         [HttpDelete("{questionId}")]
         public ActionResult DeleteQuestion(int questionId)
         {
@@ -132,7 +134,7 @@ namespace netcore_api.Controllers
             return this.NoContent();
         }
 
-        [Authorize]
+        
         [HttpPost("answer")]       
         public ActionResult<AnswerGetResponse> PostAnswer(AnswerPostRequest answerPostRequest)
         {
