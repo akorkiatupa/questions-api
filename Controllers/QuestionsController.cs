@@ -8,6 +8,12 @@ using netcore_api.Hubs;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
+using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http;
+using System.Text.Json;
+using System.Linq;
+
 namespace netcore_api.Controllers
 {
     [Authorize]
@@ -19,12 +25,49 @@ namespace netcore_api.Controllers
         private readonly IHubContext<QuestionsHub> _questionsHubContext;
         private readonly IQuestionCache _questionCache;
 
-        // IData repository added as depencency injection. As Scoped repostitory.
-        public QuestionsController(IDataRepository dataRepository, IHubContext<QuestionsHub> questionHubContext, IQuestionCache questionCache)
+        private readonly IHttpClientFactory _clientFactory;
+        private readonly string _auth0UserInfo;
+
+        // IData repository added as scoped repostitory depencency injection.
+        public QuestionsController(
+            IDataRepository dataRepository,
+            IHubContext<QuestionsHub> questionHubContext,
+            IQuestionCache questionCache,
+            IHttpClientFactory clientFactory,
+            IConfiguration configuration)
         {
             this._dataRepository = dataRepository;
             this._questionsHubContext = questionHubContext;
             this._questionCache = questionCache;
+            this._clientFactory = clientFactory;
+            this._auth0UserInfo = $"{configuration["Auth0:Authority"]}userinfo";
+        }
+
+        // Get username from external Auth0 service
+        private async Task<string> GetAuth0UserName() 
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, this._auth0UserInfo);
+
+            request.Headers.Add("Authorization", this.Request.Headers["Authorization"].First());
+
+            var httpClient = this._clientFactory.CreateClient();
+
+            var response = await httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+
+                var user = JsonSerializer.Deserialize<User>(
+                    jsonContent,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+
+                return user.Name;
+            }else
+            {
+                return "";
+            }
         }
 
         [AllowAnonymous]
@@ -81,14 +124,14 @@ namespace netcore_api.Controllers
         }
 
         [HttpPost]
-        public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
+        public async Task<ActionResult<QuestionGetSingleResponse>> PostQuestionAsync(QuestionPostRequest questionPostRequest)
         {
             var savedQuestion = this._dataRepository.PostQuestion(new QuestionPostFullRequest 
             { 
                 Title = questionPostRequest.Title,
                 Content = questionPostRequest.Content,
-                UserId = "1",
-                UserName ="bob.test@test.com",
+                UserId = this.User.FindFirst(ClaimTypes.NameIdentifier).Value,
+                UserName = await this.GetAuth0UserName(),
                 Created = DateTime.UtcNow
             });
 
@@ -138,7 +181,7 @@ namespace netcore_api.Controllers
 
         
         [HttpPost("answer")]       
-        public ActionResult<AnswerGetResponse> PostAnswer(AnswerPostRequest answerPostRequest)
+        public async Task<ActionResult<AnswerGetResponse>> PostAnswerAsync(AnswerPostRequest answerPostRequest)
         {
             var questionExists = this._dataRepository.QuestionExists(answerPostRequest.QuestionId.Value);
             if (!questionExists)
@@ -149,13 +192,13 @@ namespace netcore_api.Controllers
             {
                 Content = answerPostRequest.Content,
                 QuestionId = answerPostRequest.QuestionId.Value,
-                UserId = "1",
-                UserName = "bob.test@test.com",
+                UserId = this.User.FindFirst(ClaimTypes.NameIdentifier).Value,
+                UserName = await this.GetAuth0UserName(),
                 Created = DateTime.UtcNow
             });
             this._questionCache.Remove(answerPostRequest.QuestionId.Value);
 
-            this._questionsHubContext.Clients.Group($"Questions-{answerPostRequest.QuestionId.Value}")
+            await this._questionsHubContext.Clients.Group($"Questions-{answerPostRequest.QuestionId.Value}")
                 .SendAsync("ReceiveQuestion", this._dataRepository.GetQuestion(answerPostRequest.QuestionId.Value));
 
             return savedAnswer;
