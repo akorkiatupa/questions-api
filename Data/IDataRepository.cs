@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace netcore_api.Data
 {
+    // TODO: change to async methods on the repository interface
     public interface IDataRepository
     {
         #region getQueriesRegion

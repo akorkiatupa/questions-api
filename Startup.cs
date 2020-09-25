@@ -29,13 +29,16 @@ namespace netcore_api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
+            //TODO: is there a  way to find out if debug runtime is docker?
+            //var connectionString = this.Configuration.GetConnectionString("DefaultConnectionDocker");
             var connectionString = this.Configuration.GetConnectionString("DefaultConnection");
 
+            // this line upserts database, if db defined in connection string does't exist it creates it
             EnsureDatabase.For.SqlDatabase(connectionString);
-            // deploy changes to sql database with scripts embedded in to the project, as db transaction.
+            
+            // deploy changes to sql database with scripts embedded in to the project, as db transaction. ( only as upsert )
             var upgrader = DeployChanges.To.SqlDatabase(connectionString).WithScriptsEmbeddedInAssembly(System.Reflection.Assembly.GetExecutingAssembly()).WithTransaction().Build();
-            // TODO - Do a database migration if there are any pending SQL 
-
             if(upgrader.IsUpgradeRequired())
             {
                 upgrader.PerformUpgrade();

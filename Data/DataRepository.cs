@@ -9,6 +9,7 @@ using static Dapper.SqlMapper;
 
 namespace netcore_api.Data
 {
+    // TODO: Write as async methods
     public class DataRepository : IDataRepository
     {
         private readonly string _connectionString;

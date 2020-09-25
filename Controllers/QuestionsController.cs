@@ -16,6 +16,7 @@ using System.Linq;
 
 namespace netcore_api.Controllers
 {
+    // TODO: Change all controller actions to asyncronous returning tasks
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
