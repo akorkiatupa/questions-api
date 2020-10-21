@@ -52,7 +52,7 @@ namespace netcore_api
             services.AddScoped<IDataRepository, DataRepository>();
 
             // Add Cross origin policy, accept everything from dev environment
-            services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().WithOrigins(new string[] { "http://127.0.0.1:3000", "http://localhost:3000" }).AllowCredentials()));
+            services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().WithOrigins(new string[] { "http://127.0.0.1:3000", "http://localhost:3000", "https://qanda.azurewebsites.net" }).AllowCredentials()));
 
             services.AddSignalR();
             services.AddMemoryCache();

@@ -112,8 +112,7 @@ namespace netcore_api.Data
             {
                 connection.Open();
 
-                var questionDictionary =
-       new Dictionary<int, QuestionGetManyResponse>();
+                var questionDictionary = new Dictionary<int, QuestionGetManyResponse>();
                 return connection
                   .Query<
                     QuestionGetManyResponse,
@@ -127,11 +126,14 @@ namespace netcore_api.Data
                           if (!questionDictionary.TryGetValue(q.QuestionId, out question))
                           {
                               question = q;
-                              question.Answers =
-                    new List<AnswerGetResponse>();
+                              question.Answers = new List<AnswerGetResponse>();
                               questionDictionary.Add(question.QuestionId, question);
                           }
-                          question.Answers.Add(a);
+                          if(a.AnswerId > 0) // only add valid answers
+                          {
+                              question.Answers.Add(a);
+                          }
+                          
                           return question;
                       },
                       splitOn: "QuestionId"

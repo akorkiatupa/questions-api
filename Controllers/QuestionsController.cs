@@ -97,6 +97,13 @@ namespace netcore_api.Controllers
         }
 
         [AllowAnonymous]
+        [HttpGet("answered")]
+        public IEnumerable<QuestionGetManyResponse> GetAnsweredQuestions()
+        {
+            return this._dataRepository.GetQuestionsWithAnswers().Where(question => question.Answers.Count() > 0);
+        }
+
+        [AllowAnonymous]
         [HttpGet("unansweredasync")]
         public async Task<IEnumerable<QuestionGetManyResponse>> GetUnansweredQuestionsAsync()
         {
